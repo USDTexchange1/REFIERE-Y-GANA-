@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>REFIRE Y GANA - Plataforma</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
+  <script>
+    // Configura con tu proyecto Firebase
+    const firebaseConfig = {
+      apiKey: "TU_API_KEY",
+      authDomain: "TU_PROJECT.firebaseapp.com",
+      projectId: "TU_PROJECT_ID",
+      storageBucket: "TU_PROJECT.appspot.com",
+      messagingSenderId: "TU_SENDER_ID",
+      appId: "TU_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+  </script>
+  <style>
+    body { font-family: Arial; background:#f7f7f7; display:flex; justify-content:center; align-items:center; height:100vh; }
+    .container { background:#fff; padding:20px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.2); width:350px; }
+    h2 { text-align:center; }
+    input { width:100%; padding:10px; margin:5px 0; }
+    button { width:100%; padding:10px; margin-top:10px; cursor:pointer; border:none; border-radius:4px; }
+    button:hover { opacity:0.9; }
+    #loginBtn { background:#4CAF50; color:white; }
+    #registerBtn { background:#2196F3; color:white; }
+    .tab { text-align:center; margin:10px 0; cursor:pointer; color:#555; }
+    .tab:hover { text-decoration:underline; }
+    .hidden { display:none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="tab" onclick="showLogin()">Iniciar Sesión</div>
+    <div class="tab" onclick="showRegister()">Registrarse</div>
+
+    <!-- LOGIN -->
+    <div id="loginForm">
+      <h2>Login REFIRE Y GANA</h2>
+      <input type="email" id="loginEmail" placeholder="Correo electrónico">
+      <input type="password" id="loginPassword" placeholder="Contraseña">
+      <button id="loginBtn" onclick="login()">Iniciar Sesión</button>
+    </div>
+
+    <!-- REGISTRO -->
+    <div id="registerForm" class="hidden">
+      <h2>Registro REFIRE Y GANA</h2>
+      <input type="text" id="firstName" placeholder="Nombre">
+      <input type="text" id="lastName" placeholder="Apellido">
+      <input type="email" id="registerEmail" placeholder="Correo electrónico">
+      <input type="password" id="registerPassword" placeholder="Contraseña">
+      <input type="password" id="confirmPassword" placeholder="Confirmar contraseña">
+      <input type="text" id="referralCode" placeholder="Código de referido (opcional)">
+      <button id="registerBtn" onclick="register()">Registrarse</button>
+    </div>
+  </div>
+
+  <script>
+    // Mostrar/ocultar formularios
+    function showLogin(){
+      document.getElementById("loginForm").classList.remove("hidden");
+      document.getElementById("registerForm").classList.add("hidden");
+    }
+    function showRegister(){
+      document.getElementById("registerForm").classList.remove("hidden");
+      document.getElementById("loginForm").classList.add("hidden");
+    }
+
+    // Registro de usuario
+    async function register() {
+      const firstName = document.getElementById("firstName").value;
+      const lastName = document.getElementById("lastName").value;
+      const email = document.getElementById("registerEmail").value;
+      const password = document.getElementById("registerPassword").value;
+      const confirmPassword = document.getElementById("confirmPassword").value;
+      const referralCode = document.getElementById("referralCode").value;
+
+      if(password !== confirmPassword){
+          alert("Las contraseñas no coinciden");
+          return;
+      }
+
+      try {
+          const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+          const uid = userCredential.user.uid;
+
+          await db.collection("users").doc(uid).set({
+              firstName,
+              lastName,
+              email,
+              isActive: false,
+              promoCode: "",
+              referredBy: referralCode || null,
+              balance: 0,
+              depositHash: ""
+          });
+
+          alert("Registro exitoso. Ahora inicia sesión.");
+          showLogin();
+      } catch(error){
+          alert(error.message);
+      }
+    }
+
+    // Login de usuario
+    async function login() {
+      const email = document.getElementById("loginEmail").value;
+      const password = document.getElementById("loginPassword").value;
+
+      try {
+          await auth.signInWithEmailAndPassword(email, password);
+          alert("Login exitoso! Redirigiendo al dashboard...");
+          // Aquí rediriges al dashboard cuando lo crees
+          // window.location.href = "dashboard.html";
+      } catch(error){
+          alert(error.message);
+      }
+    }
+  </script>
+</body>
+</html>
