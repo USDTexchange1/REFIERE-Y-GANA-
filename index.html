@@ -3,9 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <title>REFIRE Y GANA - Plataforma</title>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
+
+  <!-- Firebase clásico (versión 8.x, funciona sin módulos) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
   <script>
     // Configura con tu proyecto Firebase
     const firebaseConfig = {
@@ -20,6 +23,7 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
   </script>
+
   <style>
     body { font-family: Arial; background:#f7f7f7; display:flex; justify-content:center; align-items:center; height:100vh; }
     .container { background:#fff; padding:20px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.2); width:350px; }
@@ -34,6 +38,7 @@
     .hidden { display:none; }
   </style>
 </head>
+
 <body>
   <div class="container">
     <div class="tab" onclick="showLogin()">Iniciar Sesión</div>
@@ -115,7 +120,6 @@
       try {
           await auth.signInWithEmailAndPassword(email, password);
           alert("Login exitoso! Redirigiendo al dashboard...");
-          // Aquí rediriges al dashboard cuando lo crees
           // window.location.href = "dashboard.html";
       } catch(error){
           alert(error.message);
