@@ -99,7 +99,7 @@
       <p>3. El juego dura 60 segundos, dificultad aumenta progresivamente.</p>
       <p>4. Se permiten 3 intentos por hash válido. Tras 3 partidas, ingrese un nuevo hash.</p>
       <p>5. Puntuaciones se guardan en ranking Top 5.</p>
-      <p>6. Al finalizar, recibes 10 USDT simulados y debes indicar tu red y wallet.</p>
+      <p>6. Solo al completar el juego correctamente, recibes 10 USDT simulados.</p>
       <p>7. No hay deslizamiento horizontal ni elementos confusos.</p>
     </div>
     <button id="backFromRules">Volver</button>
@@ -119,6 +119,7 @@ let users=JSON.parse(localStorage.getItem('users')||'{}');
 let currentHashValid=false;
 let attemptsLeft=3;
 let gameInterval=null;
+let gameTimer=null;
 let timeLeft=60;
 let score=0;
 let obstacles=[];
@@ -182,6 +183,10 @@ document.getElementById('validateHash').onclick = ()=>{
 
 // --- Acceder al Juego ---
 document.getElementById('accessGame').onclick = ()=>{
+  if(attemptsLeft<=0){
+    showMessage(hashMessage,"No tienes intentos disponibles. Ingresa un nuevo hash.","error");
+    return;
+  }
   document.getElementById('paymentPanel').classList.add('hidden');
   document.getElementById('gamePanel').classList.remove('hidden');
   startGame();
@@ -211,7 +216,6 @@ const ctx=canvas.getContext('2d');
 let player={x:50,y:150,width:20,height:20,vy:0,jumping:false};
 let gravity=1;
 
-// Obstáculos predefinidos, dificultad aumenta con el tiempo
 function generateObstacles(){
   let positions=[];
   for(let i=0;i<100;i++){
@@ -221,25 +225,31 @@ function generateObstacles(){
 }
 
 function startGame(){
+  if(attemptsLeft<=0){
+    showMessage(gameMessage,"No tienes intentos disponibles.","error");
+    return;
+  }
+
   score=0; timeLeft=60; player.y=150; player.vy=0; obstacles=generateObstacles(); obstacleIndex=0;
   document.getElementById('score').textContent=score;
   document.getElementById('timeLeft').textContent=timeLeft;
   document.getElementById('attempts').textContent=attemptsLeft;
   if(gameInterval) clearInterval(gameInterval);
+  if(gameTimer) clearInterval(gameTimer);
+
   gameInterval=setInterval(gameLoop,1000/60);
 
-  let gameTimer=setInterval(()=>{
+  gameTimer=setInterval(()=>{
     timeLeft--;
     document.getElementById('timeLeft').textContent=timeLeft;
     if(timeLeft<=0){
       clearInterval(gameInterval);
       clearInterval(gameTimer);
-      endGame();
+      winGame();
     }
   },1000);
 }
 
-// --- Juego Loop ---
 function gameLoop(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   player.vy+=gravity;
@@ -248,7 +258,6 @@ function gameLoop(){
   ctx.fillStyle='blue';
   ctx.fillRect(player.x,player.y,player.width,player.height);
 
-  // Obstáculos fijos pero movimiento progresivo
   let obsSpeed = 2 + (60-timeLeft)/30;
   if(obstacleIndex<obstacles.length){
     let obs = obstacles[obstacleIndex];
@@ -256,12 +265,16 @@ function gameLoop(){
     ctx.fillStyle='red';
     ctx.fillRect(obs.x,obs.y,obs.width,obs.height);
 
-    // Colisión exacta
     if(player.x<obs.x+obs.width && player.x+player.width>obs.x &&
        player.y<obs.y+obs.height && player.y+player.height>obs.y){
       clearInterval(gameInterval);
-      showMessage(gameMessage,"¡Chocaste! Juego terminado","error");
-      endGame();
+      clearInterval(gameTimer);
+      attemptsLeft--;
+      users[currentUser].attempts=attemptsLeft;
+      saveUsers();
+      showMessage(gameMessage,"¡Chocaste! Intentos restantes: "+attemptsLeft,"error");
+      document.getElementById('gamePanel').classList.add('hidden');
+      document.getElementById('paymentPanel').classList.remove('hidden');
       return;
     }
 
@@ -280,10 +293,8 @@ function jump(){
   if(!player.jumping){ player.vy=-12; player.jumping=true; }
 }
 
-// --- Fin de juego ---
-function endGame(){
-  attemptsLeft--;
-  users[currentUser].attempts=attemptsLeft;
+// --- Fin de juego exitoso ---
+function winGame(){
   users[currentUser].scores.push(Math.floor(score));
   users[currentUser].logs.push({score:Math.floor(score),date:new Date().toISOString()});
   saveUsers();
@@ -324,4 +335,4 @@ function updateRanking(){
 updateRanking();
 </script>
 </body>
-  </html>
+    </html>
