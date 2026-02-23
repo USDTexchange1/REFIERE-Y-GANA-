@@ -68,6 +68,7 @@
     <h2>Mini Arcade</h2>
     <canvas id="gameCanvas" width="360" height="200"></canvas>
     <p>Puntuación: <span id="score">0</span> | Tiempo: <span id="timeLeft">60</span>s | Intentos: <span id="attempts">3</span></p>
+    <button id="jumpBtn">Saltar</button>
     <button id="restartGame">Volver a Jugar</button>
     <button id="logout2">Cerrar Sesión</button>
     <button id="rulesBtn2">Reglas</button>
@@ -93,7 +94,7 @@
   <div id="rulesPanel" class="hidden">
     <h2>Reglas del Juego</h2>
     <div class="scrollable">
-      <p>1. Saltar obstáculos presionando la tecla espacio o tocando el canvas.</p>
+      <p>1. Saltar obstáculos presionando la tecla espacio, tocando el canvas o el botón "Saltar".</p>
       <p>2. Cada obstáculo superado suma puntos según altura y dificultad.</p>
       <p>3. El juego dura 60 segundos, dificultad aumenta progresivamente.</p>
       <p>4. Se permiten 3 intentos por hash válido. Tras 3 partidas, ingrese un nuevo hash.</p>
@@ -122,9 +123,6 @@ let timeLeft=60;
 let score=0;
 let obstacles=[];
 let obstacleIndex=0;
-let jumpSound=new Audio(); // placeholder
-let hitSound=new Audio();  // placeholder
-let mute=false;
 
 // --- Utilidades ---
 function showMessage(element,message,type='success'){
@@ -213,11 +211,11 @@ const ctx=canvas.getContext('2d');
 let player={x:50,y:150,width:20,height:20,vy:0,jumping:false};
 let gravity=1;
 
-// Obstáculos predefinidos no aleatorios, dificultad aumenta con el tiempo
+// Obstáculos predefinidos, dificultad aumenta con el tiempo
 function generateObstacles(){
   let positions=[];
   for(let i=0;i<100;i++){
-    positions.push({x:360 + i*80, y:150, width:20, height:20 + Math.min(i,30)}); // altura aumenta
+    positions.push({x:360 + i*80, y:150, width:20, height:20 + Math.min(i,30)});
   }
   return positions;
 }
@@ -229,6 +227,7 @@ function startGame(){
   document.getElementById('attempts').textContent=attemptsLeft;
   if(gameInterval) clearInterval(gameInterval);
   gameInterval=setInterval(gameLoop,1000/60);
+
   let gameTimer=setInterval(()=>{
     timeLeft--;
     document.getElementById('timeLeft').textContent=timeLeft;
@@ -240,6 +239,7 @@ function startGame(){
   },1000);
 }
 
+// --- Juego Loop ---
 function gameLoop(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   player.vy+=gravity;
@@ -247,25 +247,33 @@ function gameLoop(){
   if(player.y>150){ player.y=150; player.vy=0; player.jumping=false; }
   ctx.fillStyle='blue';
   ctx.fillRect(player.x,player.y,player.width,player.height);
-  
+
   // Obstáculos fijos pero movimiento progresivo
-  let obsSpeed = 2 + (60-timeLeft)/30; // velocidad aumenta
+  let obsSpeed = 2 + (60-timeLeft)/30;
   if(obstacleIndex<obstacles.length){
     let obs = obstacles[obstacleIndex];
     obs.x -= obsSpeed;
     ctx.fillStyle='red';
     ctx.fillRect(obs.x,obs.y,obs.width,obs.height);
+
+    // Colisión exacta
     if(player.x<obs.x+obs.width && player.x+player.width>obs.x &&
        player.y<obs.y+obs.height && player.y+player.height>obs.y){
-      score=Math.max(0,score-1);
+      clearInterval(gameInterval);
+      showMessage(gameMessage,"¡Chocaste! Juego terminado","error");
+      endGame();
+      return;
     }
+
     if(obs.x+obs.width<0) obstacleIndex++;
   }
+
   score+=0.1;
   document.getElementById('score').textContent=Math.floor(score);
 }
 
-// Salto
+// --- Salto ---
+document.getElementById('jumpBtn').onclick = jump;
 document.addEventListener('keydown',e=>{ if(e.code==='Space') jump(); });
 canvas.addEventListener('click',jump);
 function jump(){
@@ -294,8 +302,7 @@ document.getElementById('sendReward').onclick = ()=>{
 };
 document.getElementById('backPanel').onclick = ()=>{
   document.getElementById('rewardPanel').classList.add('hidden');
-  if(currentHashValid && attemptsLeft>0) document.getElementById('paymentPanel').classList.remove('hidden');
-  else document.getElementById('paymentPanel').classList.remove('hidden');
+  document.getElementById('paymentPanel').classList.remove('hidden');
 };
 
 // --- Ranking ---
