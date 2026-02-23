@@ -50,13 +50,12 @@ button:hover{
   background:#16a34a;
 }
 
-.hidden{
-  display:none;
-}
+.hidden{ display:none; }
 
 canvas{
   background:white;
   border-radius:6px;
+  margin-top:10px;
 }
 </style>
 </head>
@@ -96,7 +95,14 @@ canvas{
 <canvas id="gameCanvas" width="320" height="150"></canvas>
 </div>
 
-<!-- FINAL -->
+<!-- PERDER -->
+<div id="loseScreen" class="hidden">
+<h2>Juego Finalizado</h2>
+<p>Has colisionado con un obstáculo. Inténtalo nuevamente.</p>
+<button onclick="resetGame()">Volver al Panel</button>
+</div>
+
+<!-- RECOMPENSA -->
 <div id="rewardScreen" class="hidden">
 <h2>¡Felicidades!</h2>
 <p>Has completado la prueba y obtenido una recompensa de <strong>10 USDT</strong>.</p>
@@ -115,72 +121,71 @@ canvas{
 </div>
 
 <script>
+
 let currentUser = null;
 
 function register(){
-  let user = document.getElementById("regUser").value;
-  let pass = document.getElementById("regPass").value;
+  let user = regUser.value;
+  let pass = regPass.value;
   if(user && pass){
     localStorage.setItem("user_"+user, pass);
     alert("Cuenta creada correctamente.");
     showLogin();
-  }else{
-    alert("Complete todos los campos.");
-  }
+  } else alert("Complete todos los campos.");
 }
 
 function showLogin(){
-  document.getElementById("registerScreen").classList.add("hidden");
-  document.getElementById("loginScreen").classList.remove("hidden");
+  registerScreen.classList.add("hidden");
+  loginScreen.classList.remove("hidden");
 }
 
 function login(){
-  let user = document.getElementById("loginUser").value;
-  let pass = document.getElementById("loginPass").value;
-  let savedPass = localStorage.getItem("user_"+user);
-
-  if(savedPass === pass){
+  let user = loginUser.value;
+  let pass = loginPass.value;
+  if(localStorage.getItem("user_"+user) === pass){
     currentUser = user;
-    document.getElementById("loginScreen").classList.add("hidden");
-    document.getElementById("panelScreen").classList.remove("hidden");
-  }else{
-    alert("Credenciales incorrectas.");
-  }
+    loginScreen.classList.add("hidden");
+    panelScreen.classList.remove("hidden");
+  } else alert("Credenciales incorrectas.");
 }
 
 function activateGame(){
-  document.getElementById("panelScreen").classList.add("hidden");
-  document.getElementById("gameScreen").classList.remove("hidden");
+  panelScreen.classList.add("hidden");
+  gameScreen.classList.remove("hidden");
   startGame();
 }
 
 let canvas = document.getElementById("gameCanvas");
 let ctx = canvas.getContext("2d");
 
-let player = {x:20, y:100, width:20, height:20, dy:0};
-let obstacle = {x:320, y:110, width:20, height:40};
-let gravity = 0.6;
-let jumping = false;
-let timeLeft = 30;
+let player, obstacle, gravity, jumping, timeLeft, gameInterval, timerInterval;
 
-document.addEventListener("keydown", function(e){
-  if(e.code === "Space" && !jumping){
+function startGame(){
+  player = {x:20, y:100, w:20, h:20, dy:0};
+  obstacle = {x:320, y:100, w:20, h:40};
+  gravity = 0.6;
+  jumping = false;
+  timeLeft = 30;
+  timer.innerText = timeLeft;
+
+  canvas.addEventListener("click", jump);
+  document.addEventListener("keydown", e => { if(e.code==="Space") jump(); });
+
+  gameInterval = setInterval(updateGame, 20);
+  timerInterval = setInterval(()=>{
+    timeLeft--;
+    timer.innerText = timeLeft;
+    if(timeLeft <= 0){
+      winGame();
+    }
+  },1000);
+}
+
+function jump(){
+  if(!jumping){
     player.dy = -10;
     jumping = true;
   }
-});
-
-function startGame(){
-  let gameInterval = setInterval(updateGame, 20);
-  let timerInterval = setInterval(function(){
-    timeLeft--;
-    document.getElementById("timer").innerText = timeLeft;
-    if(timeLeft <= 0){
-      clearInterval(gameInterval);
-      clearInterval(timerInterval);
-      endGame();
-    }
-  },1000);
 }
 
 function updateGame(){
@@ -194,18 +199,40 @@ function updateGame(){
     jumping = false;
   }
 
-  obstacle.x -= 5;
+  obstacle.x -= 6;
   if(obstacle.x < -20){
     obstacle.x = 320;
   }
 
-  ctx.fillRect(player.x, player.y, player.width, player.height);
-  ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+  // Colisión
+  if(player.x < obstacle.x + obstacle.w &&
+     player.x + player.w > obstacle.x &&
+     player.y < obstacle.y + obstacle.h &&
+     player.y + player.h > obstacle.y){
+       loseGame();
+  }
+
+  ctx.fillRect(player.x, player.y, player.w, player.h);
+  ctx.fillRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h);
 }
 
-function endGame(){
-  document.getElementById("gameScreen").classList.add("hidden");
-  document.getElementById("rewardScreen").classList.remove("hidden");
+function loseGame(){
+  clearInterval(gameInterval);
+  clearInterval(timerInterval);
+  gameScreen.classList.add("hidden");
+  loseScreen.classList.remove("hidden");
+}
+
+function winGame(){
+  clearInterval(gameInterval);
+  clearInterval(timerInterval);
+  gameScreen.classList.add("hidden");
+  rewardScreen.classList.remove("hidden");
+}
+
+function resetGame(){
+  loseScreen.classList.add("hidden");
+  panelScreen.classList.remove("hidden");
 }
 
 function sendReward(){
@@ -213,12 +240,12 @@ function sendReward(){
   let wallet = document.getElementById("wallet").value;
 
   if(network && wallet){
-    alert("La transacción ha sido procesada correctamente. El envío de su recompensa se encuentra en validación y los fondos estarán reflejados en la dirección proporcionada en un plazo aproximado de diez minutos.");
-  }else{
+    alert("La operación ha sido registrada satisfactoriamente. El procesamiento de su recompensa se encuentra en validación y los fondos serán acreditados en la dirección indicada en un plazo estimado de diez minutos.");
+  } else {
     alert("Debe seleccionar la red y completar la dirección.");
   }
 }
-</script>
 
+</script>
 </body>
   </html>
