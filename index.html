@@ -10,15 +10,12 @@ body { margin:0; font-family:Arial,sans-serif; background:#0f172a; color:white; 
 input, select { width:100%; padding:10px; margin:8px 0; border-radius:6px; border:none;}
 button { width:100%; padding:10px; margin-top:10px; border:none; border-radius:6px; background:#22c55e; color:white; font-weight:bold; cursor:pointer; transition:0.3s;}
 button:hover { background:#16a34a;}
-.copyBox { background:#0f172a; padding:8px; border-radius:6px; font-size:12px; word-break:break-all; margin-top:8px;}
 .hidden { display:none;}
 canvas { background:#f0f0f0; border-radius:6px; margin-top:10px; display:block; width:100%;}
-.loader { border:5px solid #334155; border-top:5px solid #22c55e; border-radius:50%; width:40px; height:40px; margin:20px auto; animation:spin 1s linear infinite;}
-@keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);}}
-.messageBox{ margin-top:15px; font-size:14px; line-height:1.4;}
 #rankingBox { margin-bottom:10px; background:#0f172a; padding:10px; border-radius:6px; text-align:left; max-height:100px; overflow-y:auto; font-size:14px;}
 #jumpBtn { margin-top:10px; background:#3b82f6; }
 #jumpBtn:hover { background:#2563eb; }
+.info { font-size:13px; margin-top:5px; }
 </style>
 </head>
 <body>
@@ -41,19 +38,16 @@ canvas { background:#f0f0f0; border-radius:6px; margin-top:10px; display:block; 
 </div>
 
 <div id="panelScreen" class="hidden">
-<h2>Activación del Juego</h2>
-<p>Para habilitar el acceso debe realizar un depósito de <strong>2 USDT</strong> (simulación demo).</p>
-<div class="copyBox" id="walletAddress">0x3670a0bFfb8b8A6D42177807F8dFd369A3995b9e</div>
-<button onclick="copyAddress()">Copiar Dirección</button>
-<input type="text" id="txHash" placeholder="Ingrese hash de transacción (simulado)">
-<button onclick="validateHash()">Validar Transacción</button>
-<p id="validationStatus" style="font-size:12px;"></p>
-<button id="startGameBtn" class="hidden" onclick="activateGame()">Acceder al Juego</button>
+<h2>Panel del Juego</h2>
+<p><strong>Intentos disponibles:</strong> <span id="attemptsDisplay">0</span></p>
+<button onclick="simulatePayment()">Simular Pago (3 intentos)</button>
+<button onclick="startIfAttempts()">Jugar</button>
 </div>
 
 <div id="gameScreen" class="hidden">
 <div id="rankingBox"></div>
-<h3>Tiempo restante: <span id="timer">30</span>s</h3>
+<h3>Tiempo restante: <span id="timer">60</span>s</h3>
+<p class="info">Intentos restantes: <span id="attemptsGame"></span></p>
 <canvas id="gameCanvas" width="320" height="150"></canvas>
 <p id="scoreDisplay">Puntuación: 0</p>
 <button id="jumpBtn" onclick="jump()">Saltar</button>
@@ -61,114 +55,98 @@ canvas { background:#f0f0f0; border-radius:6px; margin-top:10px; display:block; 
 
 <div id="loseScreen" class="hidden">
 <h2>Juego Finalizado</h2>
-<p>Has colisionado con un obstáculo. Inténtalo nuevamente.</p>
-<button onclick="resetGame()">Volver al Panel</button>
+<button onclick="backToPanel()">Volver al Panel</button>
+<button onclick="startIfAttempts()">Volver a Jugar</button>
 </div>
 
 <div id="rewardScreen" class="hidden">
-<h2>¡Felicidades!</h2>
-<p>Has completado la prueba y obtenido una recompensa de <strong>10 USDT</strong> (simulado).</p>
-<select id="network">
-<option value="">Seleccione Red</option>
-<option>BEP20</option>
-<option>TRC20</option>
-<option>ERC20</option>
-</select>
-<input type="text" id="wallet" placeholder="Dirección de billetera">
-<button onclick="sendReward()">Enviar</button>
-<div id="processingArea" class="hidden">
-  <div class="loader"></div>
-  <p>Procesando solicitud...</p>
-</div>
-<p id="finalMessage" class="messageBox"></p>
+<h2>¡Completaste el minuto!</h2>
+<button onclick="backToPanel()">Volver al Panel</button>
+<button onclick="startIfAttempts()">Volver a Jugar</button>
 </div>
 
 </div>
 
 <script>
-let currentUser = null;
+let currentUser=null;
+let canvas=document.getElementById("gameCanvas");
+let ctx=canvas.getContext("2d");
+
+let player, obstacles, gravity, jumping, gameSpeed, score, timeLeft;
+let gameInterval, timerInterval;
 
 function register(){
-  let user = regUser.value;
-  let pass = regPass.value;
-  if(user && pass){
-    localStorage.setItem("user_"+user, pass);
-    alert("Cuenta creada correctamente.");
+  if(regUser.value && regPass.value){
+    localStorage.setItem("user_"+regUser.value, regPass.value);
+    localStorage.setItem("attempts_"+regUser.value, 0);
+    alert("Cuenta creada.");
     showLogin();
-  } else alert("Complete todos los campos.");
+  }
 }
+
 function showLogin(){ registerScreen.classList.add("hidden"); loginScreen.classList.remove("hidden"); }
+
 function login(){
-  let user = loginUser.value;
-  let pass = loginPass.value;
-  if(localStorage.getItem("user_"+user) === pass){
-    currentUser = user;
+  if(localStorage.getItem("user_"+loginUser.value)===loginPass.value){
+    currentUser=loginUser.value;
     loginScreen.classList.add("hidden");
     panelScreen.classList.remove("hidden");
-    showRanking();
+    updateAttempts();
   } else alert("Credenciales incorrectas.");
 }
-function copyAddress(){ navigator.clipboard.writeText(walletAddress.innerText); alert("Dirección copiada al portapapeles."); }
-function validateHash(){
-  let hash = txHash.value.trim();
-  let regex = /^0x[a-fA-F0-9]{64}$/;
-  if(regex.test(hash)){
-    validationStatus.innerHTML = "Transacción detectada y verificada correctamente (simulación).";
-    validationStatus.style.color = "#22c55e";
-    startGameBtn.classList.remove("hidden");
-  } else { validationStatus.innerHTML = "Hash inválido. Verifique el formato."; validationStatus.style.color = "red"; }
+
+function updateAttempts(){
+  let attempts=localStorage.getItem("attempts_"+currentUser)||0;
+  attemptsDisplay.innerText=attempts;
 }
-function activateGame(){ panelScreen.classList.add("hidden"); gameScreen.classList.remove("hidden"); startGame(); }
 
-let canvas = document.getElementById("gameCanvas");
-let ctx = canvas.getContext("2d");
+function simulatePayment(){
+  let attempts=parseInt(localStorage.getItem("attempts_"+currentUser)||0);
+  attempts+=3;
+  localStorage.setItem("attempts_"+currentUser, attempts);
+  updateAttempts();
+  alert("Pago simulado: +3 intentos");
+}
 
-let player, obstacles, gravity, jumping, gameSpeed, score, timeLeft, gameInterval, timerInterval;
-let jumpSound = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-quick-jump-arcade-game-239.mp3");
-let loseSound = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-player-losing-or-failing-2042.mp3");
-
-let clouds=[];
-for(let i=0;i<5;i++){ clouds.push({x:Math.random()*320, y:Math.random()*50, w:Math.random()*50+30, speed:Math.random()*0.5+0.2}); }
+function startIfAttempts(){
+  let attempts=parseInt(localStorage.getItem("attempts_"+currentUser)||0);
+  if(attempts>0){
+    attempts--;
+    localStorage.setItem("attempts_"+currentUser, attempts);
+    startGame();
+  } else alert("No tienes intentos disponibles.");
+}
 
 function startGame(){
-  player={x:40,y:110,w:20,h:20,dy:0,leg:0};
+  panelScreen.classList.add("hidden");
+  loseScreen.classList.add("hidden");
+  rewardScreen.classList.add("hidden");
+  gameScreen.classList.remove("hidden");
+
+  attemptsGame.innerText=localStorage.getItem("attempts_"+currentUser);
+
+  player={x:40,y:110,w:20,h:20,dy:0};
   obstacles=[];
   gravity=0.6;
   jumping=false;
   gameSpeed=3;
   score=0;
-  timeLeft=30;
-  document.getElementById("timer").innerText=timeLeft;
+  timeLeft=60;
 
-  canvas.addEventListener("click", jump);
-  document.addEventListener("keydown", e=>{if(e.code==="Space") jump();});
+  timer.innerText=timeLeft;
 
-  let nextObstacle = 150;
-  gameInterval=setInterval(()=>{
-    updateGame(nextObstacle);
-    // generar obstáculo predecible
-    if(obstacles.length===0 || obstacles[obstacles.length-1].x<320-nextObstacle){
-      let h=30; // altura fija
-      obstacles.push({x:320, y:130-h, w:15, h:h});
-      // incrementar distancia para siguiente
-      nextObstacle=Math.max(120, nextObstacle-0.5);
-    }
-  },20);
-
+  gameInterval=setInterval(updateGame,20);
   timerInterval=setInterval(()=>{
     timeLeft--;
-    document.getElementById("timer").innerText=timeLeft;
+    timer.innerText=timeLeft;
     if(timeLeft<=0) winGame();
   },1000);
 }
 
-function jump(){ if(!jumping){ player.dy=-10; jumping=true; jumpSound.currentTime=0; jumpSound.play(); } }
+function jump(){ if(!jumping){ player.dy=-10; jumping=true; } }
 
-function updateGame(nextObstacle){
+function updateGame(){
   ctx.clearRect(0,0,320,150);
-  ctx.fillStyle="#fff";
-  clouds.forEach(c=>{ ctx.fillRect(c.x,c.y,c.w,10); c.x-=c.speed; if(c.x+c.w<0) c.x=320; });
-
   ctx.fillStyle="#000";
   ctx.fillRect(0,130,320,2);
 
@@ -176,60 +154,67 @@ function updateGame(nextObstacle){
   player.y+=player.dy;
   if(player.y>=110){ player.y=110; jumping=false; }
 
-  player.leg+=0.2;
-  let legOffset=Math.sin(player.leg)*4;
-  ctx.fillStyle="#000";
   ctx.fillRect(player.x,player.y,player.w,player.h);
-  ctx.fillRect(player.x,player.y+player.h,player.w/2,legOffset);
 
-  obstacles.forEach((o)=>{
+  if(score%120===0){
+    obstacles.push({x:320,y:110,w:15,h:20});
+  }
+
+  obstacles.forEach(o=>{
     o.x-=gameSpeed;
     ctx.fillRect(o.x,o.y,o.w,o.h);
-    if(player.x<o.x+o.w && player.x+player.w>o.x && player.y<o.y+o.h && player.y+player.h>o.y) loseGame();
+    if(player.x<o.x+o.w && player.x+player.w>o.x && player.y<o.y+o.h && player.y+player.h>o.y){
+      loseGame();
+    }
   });
 
   obstacles=obstacles.filter(o=>o.x>-20);
   score++;
-  document.getElementById("scoreDisplay").innerText="Puntuación: "+score;
-  if(score%500===0) gameSpeed+=0.3;
+  scoreDisplay.innerText="Puntuación: "+score;
+
+  if(score%600===0) gameSpeed+=0.5;
 }
 
-function loseGame(){ clearInterval(gameInterval); clearInterval(timerInterval); loseSound.play(); saveScore(); gameScreen.classList.add("hidden"); loseScreen.classList.remove("hidden"); }
-function winGame(){ clearInterval(gameInterval); clearInterval(timerInterval); saveScore(); gameScreen.classList.add("hidden"); rewardScreen.classList.remove("hidden"); }
+function loseGame(){
+  clearInterval(gameInterval);
+  clearInterval(timerInterval);
+  saveScore();
+  gameScreen.classList.add("hidden");
+  loseScreen.classList.remove("hidden");
+}
+
+function winGame(){
+  clearInterval(gameInterval);
+  clearInterval(timerInterval);
+  saveScore();
+  gameScreen.classList.add("hidden");
+  rewardScreen.classList.remove("hidden");
+}
 
 function saveScore(){
   let ranking=JSON.parse(localStorage.getItem("ranking"))||[];
-  ranking.push({user:currentUser||"Invitado", score:score});
+  ranking.push({user:currentUser,score:score});
   ranking.sort((a,b)=>b.score-a.score);
   ranking=ranking.slice(0,5);
-  localStorage.setItem("ranking", JSON.stringify(ranking));
+  localStorage.setItem("ranking",JSON.stringify(ranking));
   showRanking();
 }
 
 function showRanking(){
   let rankingBox=document.getElementById("rankingBox");
   let ranking=JSON.parse(localStorage.getItem("ranking"))||[];
-  if(ranking.length===0){ rankingBox.innerHTML="Top 5: Ninguno aún"; return; }
+  if(ranking.length===0){ rankingBox.innerHTML="Top 5: Ninguno aún"; return;}
   rankingBox.innerHTML="<strong>Top 5:</strong><br>";
-  ranking.forEach((r,i)=>{ rankingBox.innerHTML+=(i+1)+". "+r.user+" - "+r.score+"<br>"; });
+  ranking.forEach((r,i)=>{
+    rankingBox.innerHTML+=(i+1)+". "+r.user+" - "+r.score+"<br>";
+  });
 }
 
-function resetGame(){ loseScreen.classList.add("hidden"); panelScreen.classList.remove("hidden"); }
-
-function sendReward(){
-  let network=document.getElementById("network").value;
-  let wallet=document.getElementById("wallet").value;
-  if(network && wallet){
-    processingArea.classList.remove("hidden");
-    finalMessage.innerHTML="";
-    setTimeout(()=>{
-      processingArea.classList.add("hidden");
-      finalMessage.innerHTML=
-      "La solicitud ha sido registrada exitosamente.<br><br>"+
-      "La transferencia de <strong>10 USDT</strong> se encuentra en proceso de validación en la red seleccionada.<br><br>"+
-      "Los fondos serán acreditados en la dirección proporcionada en un plazo estimado de hasta diez (10) minutos, sujeto a confirmación de la red.";
-    },6000);
-  } else alert("Debe seleccionar la red y completar la dirección.");
+function backToPanel(){
+  loseScreen.classList.add("hidden");
+  rewardScreen.classList.add("hidden");
+  panelScreen.classList.remove("hidden");
+  updateAttempts();
 }
 </script>
 </body>
