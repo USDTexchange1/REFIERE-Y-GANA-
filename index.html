@@ -1,130 +1,224 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>REFIRE Y GANA - Plataforma</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini Game Crypto Demo</title>
 
-  <!-- Firebase clásico (versión 8.x, funciona sin módulos) -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#0f172a;
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
 
-  <script>
-    // Configura con tu proyecto Firebase
-    const firebaseConfig = {
-      apiKey: "TU_API_KEY",
-      authDomain: "TU_PROJECT.firebaseapp.com",
-      projectId: "TU_PROJECT_ID",
-      storageBucket: "TU_PROJECT.appspot.com",
-      messagingSenderId: "TU_SENDER_ID",
-      appId: "TU_APP_ID"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-  </script>
+.container{
+  width:360px;
+  background:#1e293b;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 0 20px rgba(0,0,0,0.5);
+  text-align:center;
+}
 
-  <style>
-    body { font-family: Arial; background:#f7f7f7; display:flex; justify-content:center; align-items:center; height:100vh; }
-    .container { background:#fff; padding:20px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.2); width:350px; }
-    h2 { text-align:center; }
-    input { width:100%; padding:10px; margin:5px 0; }
-    button { width:100%; padding:10px; margin-top:10px; cursor:pointer; border:none; border-radius:4px; }
-    button:hover { opacity:0.9; }
-    #loginBtn { background:#4CAF50; color:white; }
-    #registerBtn { background:#2196F3; color:white; }
-    .tab { text-align:center; margin:10px 0; cursor:pointer; color:#555; }
-    .tab:hover { text-decoration:underline; }
-    .hidden { display:none; }
-  </style>
+input, select{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border-radius:6px;
+  border:none;
+}
+
+button{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border:none;
+  border-radius:6px;
+  background:#22c55e;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#16a34a;
+}
+
+.hidden{
+  display:none;
+}
+
+canvas{
+  background:white;
+  border-radius:6px;
+}
+</style>
 </head>
 
 <body>
-  <div class="container">
-    <div class="tab" onclick="showLogin()">Iniciar Sesión</div>
-    <div class="tab" onclick="showRegister()">Registrarse</div>
 
-    <!-- LOGIN -->
-    <div id="loginForm">
-      <h2>Login REFIRE Y GANA</h2>
-      <input type="email" id="loginEmail" placeholder="Correo electrónico">
-      <input type="password" id="loginPassword" placeholder="Contraseña">
-      <button id="loginBtn" onclick="login()">Iniciar Sesión</button>
-    </div>
+<div class="container">
 
-    <!-- REGISTRO -->
-    <div id="registerForm" class="hidden">
-      <h2>Registro REFIRE Y GANA</h2>
-      <input type="text" id="firstName" placeholder="Nombre">
-      <input type="text" id="lastName" placeholder="Apellido">
-      <input type="email" id="registerEmail" placeholder="Correo electrónico">
-      <input type="password" id="registerPassword" placeholder="Contraseña">
-      <input type="password" id="confirmPassword" placeholder="Confirmar contraseña">
-      <input type="text" id="referralCode" placeholder="Código de referido (opcional)">
-      <button id="registerBtn" onclick="register()">Registrarse</button>
-    </div>
-  </div>
+<!-- REGISTRO -->
+<div id="registerScreen">
+<h2>Registro</h2>
+<input type="text" id="regUser" placeholder="Usuario">
+<input type="password" id="regPass" placeholder="Contraseña">
+<button onclick="register()">Crear Cuenta</button>
+<p>¿Ya tienes cuenta?</p>
+<button onclick="showLogin()">Iniciar Sesión</button>
+</div>
 
-  <script>
-    // Mostrar/ocultar formularios
-    function showLogin(){
-      document.getElementById("loginForm").classList.remove("hidden");
-      document.getElementById("registerForm").classList.add("hidden");
+<!-- LOGIN -->
+<div id="loginScreen" class="hidden">
+<h2>Iniciar Sesión</h2>
+<input type="text" id="loginUser" placeholder="Usuario">
+<input type="password" id="loginPass" placeholder="Contraseña">
+<button onclick="login()">Entrar</button>
+</div>
+
+<!-- PANEL -->
+<div id="panelScreen" class="hidden">
+<h2>Activación del Juego</h2>
+<p>Para acceder al juego es necesario realizar un pago de activación equivalente a <strong>2 USDT</strong>. Una vez confirmado el acceso, podrás participar y optar por la recompensa.</p>
+<button onclick="activateGame()">Activar Juego</button>
+</div>
+
+<!-- JUEGO -->
+<div id="gameScreen" class="hidden">
+<h3>Tiempo restante: <span id="timer">30</span>s</h3>
+<canvas id="gameCanvas" width="320" height="150"></canvas>
+</div>
+
+<!-- FINAL -->
+<div id="rewardScreen" class="hidden">
+<h2>¡Felicidades!</h2>
+<p>Has completado la prueba y obtenido una recompensa de <strong>10 USDT</strong>.</p>
+
+<select id="network">
+<option value="">Seleccione Red</option>
+<option>BEP20</option>
+<option>TRC20</option>
+<option>ERC20</option>
+</select>
+
+<input type="text" id="wallet" placeholder="Dirección de billetera">
+<button onclick="sendReward()">Enviar</button>
+</div>
+
+</div>
+
+<script>
+let currentUser = null;
+
+function register(){
+  let user = document.getElementById("regUser").value;
+  let pass = document.getElementById("regPass").value;
+  if(user && pass){
+    localStorage.setItem("user_"+user, pass);
+    alert("Cuenta creada correctamente.");
+    showLogin();
+  }else{
+    alert("Complete todos los campos.");
+  }
+}
+
+function showLogin(){
+  document.getElementById("registerScreen").classList.add("hidden");
+  document.getElementById("loginScreen").classList.remove("hidden");
+}
+
+function login(){
+  let user = document.getElementById("loginUser").value;
+  let pass = document.getElementById("loginPass").value;
+  let savedPass = localStorage.getItem("user_"+user);
+
+  if(savedPass === pass){
+    currentUser = user;
+    document.getElementById("loginScreen").classList.add("hidden");
+    document.getElementById("panelScreen").classList.remove("hidden");
+  }else{
+    alert("Credenciales incorrectas.");
+  }
+}
+
+function activateGame(){
+  document.getElementById("panelScreen").classList.add("hidden");
+  document.getElementById("gameScreen").classList.remove("hidden");
+  startGame();
+}
+
+let canvas = document.getElementById("gameCanvas");
+let ctx = canvas.getContext("2d");
+
+let player = {x:20, y:100, width:20, height:20, dy:0};
+let obstacle = {x:320, y:110, width:20, height:40};
+let gravity = 0.6;
+let jumping = false;
+let timeLeft = 30;
+
+document.addEventListener("keydown", function(e){
+  if(e.code === "Space" && !jumping){
+    player.dy = -10;
+    jumping = true;
+  }
+});
+
+function startGame(){
+  let gameInterval = setInterval(updateGame, 20);
+  let timerInterval = setInterval(function(){
+    timeLeft--;
+    document.getElementById("timer").innerText = timeLeft;
+    if(timeLeft <= 0){
+      clearInterval(gameInterval);
+      clearInterval(timerInterval);
+      endGame();
     }
-    function showRegister(){
-      document.getElementById("registerForm").classList.remove("hidden");
-      document.getElementById("loginForm").classList.add("hidden");
-    }
+  },1000);
+}
 
-    // Registro de usuario
-    async function register() {
-      const firstName = document.getElementById("firstName").value;
-      const lastName = document.getElementById("lastName").value;
-      const email = document.getElementById("registerEmail").value;
-      const password = document.getElementById("registerPassword").value;
-      const confirmPassword = document.getElementById("confirmPassword").value;
-      const referralCode = document.getElementById("referralCode").value;
+function updateGame(){
+  ctx.clearRect(0,0,320,150);
 
-      if(password !== confirmPassword){
-          alert("Las contraseñas no coinciden");
-          return;
-      }
+  player.dy += gravity;
+  player.y += player.dy;
 
-      try {
-          const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-          const uid = userCredential.user.uid;
+  if(player.y >= 100){
+    player.y = 100;
+    jumping = false;
+  }
 
-          await db.collection("users").doc(uid).set({
-              firstName,
-              lastName,
-              email,
-              isActive: false,
-              promoCode: "",
-              referredBy: referralCode || null,
-              balance: 0,
-              depositHash: ""
-          });
+  obstacle.x -= 5;
+  if(obstacle.x < -20){
+    obstacle.x = 320;
+  }
 
-          alert("Registro exitoso. Ahora inicia sesión.");
-          showLogin();
-      } catch(error){
-          alert(error.message);
-      }
-    }
+  ctx.fillRect(player.x, player.y, player.width, player.height);
+  ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+}
 
-    // Login de usuario
-    async function login() {
-      const email = document.getElementById("loginEmail").value;
-      const password = document.getElementById("loginPassword").value;
+function endGame(){
+  document.getElementById("gameScreen").classList.add("hidden");
+  document.getElementById("rewardScreen").classList.remove("hidden");
+}
 
-      try {
-          await auth.signInWithEmailAndPassword(email, password);
-          alert("Login exitoso! Redirigiendo al dashboard...");
-          // window.location.href = "dashboard.html";
-      } catch(error){
-          alert(error.message);
-      }
-    }
-  </script>
+function sendReward(){
+  let network = document.getElementById("network").value;
+  let wallet = document.getElementById("wallet").value;
+
+  if(network && wallet){
+    alert("La transacción ha sido procesada correctamente. El envío de su recompensa se encuentra en validación y los fondos estarán reflejados en la dirección proporcionada en un plazo aproximado de diez minutos.");
+  }else{
+    alert("Debe seleccionar la red y completar la dirección.");
+  }
+}
+</script>
+
 </body>
-</html>
+  </html>
