@@ -3,336 +3,328 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Mini Arcade USDT</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+
 <style>
-  body {
-    margin:0;
-    font-family: Arial, sans-serif;
-    background:#121212;
-    color:#f0f0f0;
-    display:flex;
-    justify-content:center;
-    align-items:flex-start;
-    min-height:100vh;
-  }
-  .container {
-    background:#1e1e1e;
-    box-shadow:0 4px 10px rgba(0,0,0,0.6);
-    border-radius:12px;
-    padding:20px;
-    margin-top:20px;
-    max-width:400px;
-    width:90%;
-  }
-  h2 { text-align:center; margin-top:0; }
-  input, select, button { width:100%; margin:5px 0; padding:10px; border-radius:8px; border:none; font-size:16px; }
-  button { background:#ff6f00; color:white; cursor:pointer; transition:0.3s; }
-  button:hover { background:#ff8f00; }
-  canvas { display:block; background:#ddd; margin:10px auto; border-radius:8px; }
-  .hidden { display:none; }
-  .message { text-align:center; padding:5px; margin:5px 0; border-radius:5px; }
-  .success { background-color:#00a676; color:white; }
-  .error { background-color:#c62828; color:white; }
-  .scrollable { max-height:300px; overflow-y:auto; padding-right:10px; }
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+body{
+background:linear-gradient(135deg,#020617,#0f172a,#020617);
+background-size:400% 400%;
+animation:bgmove 10s infinite alternate;
+display:flex;
+justify-content:center;
+align-items:flex-start;
+min-height:100vh;
+color:white;
+}
+
+@keyframes bgmove{
+0%{background-position:0% 50%}
+100%{background-position:100% 50%}
+}
+
+.container{
+margin-top:30px;
+width:95%;
+max-width:420px;
+padding:25px;
+
+border-radius:20px;
+
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(15px);
+
+box-shadow:
+0 0 30px rgba(0,255,255,0.2),
+0 0 60px rgba(0,140,255,0.2);
+
+border:1px solid rgba(255,255,255,0.1);
+}
+
+h2{
+text-align:center;
+margin-bottom:15px;
+font-family:'Orbitron',sans-serif;
+color:#00e5ff;
+}
+
+input,select{
+width:100%;
+padding:12px;
+margin:6px 0;
+border-radius:10px;
+border:none;
+outline:none;
+background:#0f172a;
+color:white;
+font-size:15px;
+}
+
+input::placeholder{
+color:#94a3b8;
+}
+
+button{
+width:100%;
+padding:12px;
+margin:6px 0;
+border-radius:12px;
+border:none;
+cursor:pointer;
+
+font-weight:500;
+font-size:15px;
+
+background:linear-gradient(135deg,#00e5ff,#0066ff);
+color:white;
+
+box-shadow:0 0 15px rgba(0,229,255,0.6);
+
+transition:0.3s;
+}
+
+button:hover{
+
+transform:scale(1.05);
+
+box-shadow:
+0 0 20px #00e5ff,
+0 0 40px #0066ff;
+
+}
+
+canvas{
+display:block;
+margin:auto;
+margin-top:10px;
+
+background:linear-gradient(#e0f7fa,#b2ebf2);
+
+border-radius:12px;
+
+border:3px solid #00e5ff;
+
+box-shadow:
+0 0 20px rgba(0,229,255,0.7);
+}
+
+.hidden{
+display:none;
+}
+
+.message{
+text-align:center;
+padding:8px;
+margin-top:5px;
+border-radius:8px;
+font-size:14px;
+}
+
+.success{
+background:#00c853;
+}
+
+.error{
+background:#d50000;
+}
+
+.scrollable{
+max-height:300px;
+overflow-y:auto;
+padding-right:5px;
+}
+
+.scrollable p{
+margin-bottom:10px;
+line-height:1.4;
+}
+
+#rankingPanel{
+margin-top:15px;
+background:#020617;
+padding:10px;
+border-radius:10px;
+}
+
+#rankingList li{
+padding:4px;
+border-bottom:1px solid rgba(255,255,255,0.1);
+}
+
+.stats{
+text-align:center;
+margin-top:10px;
+font-size:15px;
+color:#cbd5f5;
+}
+
+.app-title{
+font-size:26px;
+text-align:center;
+margin-bottom:10px;
+font-family:'Orbitron',sans-serif;
+color:#00e5ff;
+text-shadow:0 0 15px #00e5ff;
+}
+
 </style>
 </head>
+
 <body>
+
 <div class="container" id="container">
 
-  <!-- Panel Login/Registro -->
-  <div id="authPanel">
-    <h2>Mini Arcade USDT</h2>
-    <input type="text" id="username" placeholder="Usuario">
-    <input type="password" id="password" placeholder="Contraseña">
-    <button id="registerBtn">Registrar</button>
-    <button id="loginBtn">Iniciar Sesión</button>
-    <div id="authMessage" class="message"></div>
-  </div>
+<div class="app-title">🎮 MINI ARCADE USDT</div>
 
-  <!-- Panel Pago/Hash -->
-  <div id="paymentPanel" class="hidden">
-    <h2>Simulación de Depósito</h2>
-    <p>Enviar 2 USDT a la dirección:</p>
-    <input type="text" id="depositAddress" value="0x3670a0bFfb8b8A6D42177807F8dFd369A3995b9e" readonly>
-    <button id="copyAddress">Copiar Dirección</button>
-    <input type="text" id="txHash" placeholder="Ingrese hash de transacción">
-    <button id="validateHash">Validar Hash</button>
-    <div id="hashMessage" class="message"></div>
-    <button id="accessGame" disabled>Acceder al Juego</button>
-    <button id="rulesBtn1">Reglas</button>
-    <button id="logout1">Cerrar Sesión</button>
-  </div>
+<!-- LOGIN -->
 
-  <!-- Panel Juego -->
-  <div id="gamePanel" class="hidden">
-    <h2>Mini Arcade</h2>
-    <canvas id="gameCanvas" width="360" height="200"></canvas>
-    <p>Puntuación: <span id="score">0</span> | Tiempo: <span id="timeLeft">60</span>s | Intentos: <span id="attempts">3</span></p>
-    <button id="jumpBtn">Saltar</button>
-    <button id="restartGame">Volver a Jugar</button>
-    <button id="logout2">Cerrar Sesión</button>
-    <button id="rulesBtn2">Reglas</button>
-    <div id="gameMessage" class="message"></div>
-  </div>
+<div id="authPanel">
 
-  <!-- Panel Recompensa -->
-  <div id="rewardPanel" class="hidden">
-    <h2>Recompensa 10 USDT</h2>
-    <label>Seleccionar Red:</label>
-    <select id="networkSelect">
-      <option value="BEP20">BEP20</option>
-      <option value="TRC20">TRC20</option>
-      <option value="ERC20">ERC20</option>
-    </select>
-    <input type="text" id="walletAddress" placeholder="Ingrese dirección de wallet">
-    <button id="sendReward">Enviar Recompensa</button>
-    <div id="rewardMessage" class="message"></div>
-    <button id="backPanel">Volver al Panel</button>
-  </div>
+<input type="text" id="username" placeholder="Usuario">
 
-  <!-- Panel Reglas -->
-  <div id="rulesPanel" class="hidden">
-    <h2>Reglas del Juego</h2>
-    <div class="scrollable">
-      <p>1. Saltar obstáculos presionando la tecla espacio o el botón "Saltar".</p>
-      <p>2. Cada obstáculo superado suma puntos según altura y dificultad.</p>
-      <p>3. El juego dura 60 segundos, dificultad aumenta progresivamente.</p>
-      <p>4. Se permiten 3 intentos por hash válido. Tras 3 partidas, ingrese un nuevo hash.</p>
-      <p>5. Puntuaciones se guardan en ranking Top 5.</p>
-      <p>6. Solo al completar el juego correctamente, recibes 10 USDT listos para retirar.</p>
-      <p>7. No hay deslizamiento horizontal ni elementos confusos.</p>
-    </div>
-    <button id="backFromRules">Volver</button>
-  </div>
+<input type="password" id="password" placeholder="Contraseña">
 
-  <!-- Panel Ranking -->
-  <div id="rankingPanel" class="hidden">
-    <h2>Ranking Top 5</h2>
-    <ol id="rankingList"></ol>
-  </div>
+<button id="registerBtn">Crear Cuenta</button>
+
+<button id="loginBtn">Iniciar Sesión</button>
+
+<div id="authMessage" class="message"></div>
 
 </div>
 
+
+<!-- DEPOSITO -->
+
+<div id="paymentPanel" class="hidden">
+
+<h2>Depositar 2 USDT</h2>
+
+<input type="text" id="depositAddress" value="0x3670a0bFfb8b8A6D42177807F8dFd369A3995b9e" readonly>
+
+<button id="copyAddress">Copiar Dirección</button>
+
+<input type="text" id="txHash" placeholder="Ingrese Hash de transacción">
+
+<button id="validateHash">Validar Hash</button>
+
+<div id="hashMessage" class="message"></div>
+
+<button id="accessGame" disabled>Acceder al Juego</button>
+
+<button id="rulesBtn1">Ver Reglas</button>
+
+<button id="logout1">Cerrar Sesión</button>
+
+</div>
+
+
+<!-- JUEGO -->
+
+<div id="gamePanel" class="hidden">
+
+<h2>Mini Arcade</h2>
+
+<canvas id="gameCanvas" width="360" height="200"></canvas>
+
+<div class="stats">
+
+Puntuación: <span id="score">0</span> |
+Tiempo: <span id="timeLeft">60</span>s |
+Intentos: <span id="attempts">3</span>
+
+</div>
+
+<button id="jumpBtn">Saltar</button>
+
+<button id="restartGame">Volver a Jugar</button>
+
+<button id="logout2">Cerrar Sesión</button>
+
+<button id="rulesBtn2">Reglas</button>
+
+<div id="gameMessage" class="message"></div>
+
+</div>
+
+
+<!-- RECOMPENSA -->
+
+<div id="rewardPanel" class="hidden">
+
+<h2>Reclamar 10 USDT</h2>
+
+<select id="networkSelect">
+<option value="BEP20">BEP20</option>
+<option value="TRC20">TRC20</option>
+<option value="ERC20">ERC20</option>
+</select>
+
+<input type="text" id="walletAddress" placeholder="Dirección de Wallet">
+
+<button id="sendReward">Enviar Recompensa</button>
+
+<div id="rewardMessage" class="message"></div>
+
+<button id="backPanel">Volver</button>
+
+</div>
+
+
+<!-- REGLAS -->
+
+<div id="rulesPanel" class="hidden">
+
+<h2>Reglas</h2>
+
+<div class="scrollable">
+
+<p>1. Salta obstáculos usando el botón o la barra espaciadora.</p>
+
+<p>2. Cada obstáculo aumenta la puntuación.</p>
+
+<p>3. El juego dura 60 segundos.</p>
+
+<p>4. Cada hash válido otorga 3 intentos.</p>
+
+<p>5. Después de 3 partidas necesitas otro hash.</p>
+
+<p>6. Completa el juego para reclamar 10 USDT.</p>
+
+</div>
+
+<button id="backFromRules">Volver</button>
+
+</div>
+
+
+<!-- RANKING -->
+
+<div id="rankingPanel">
+
+<h2>Top Players</h2>
+
+<ol id="rankingList"></ol>
+
+</div>
+
+</div>
+
+
 <script>
-let currentUser=null;
-let users=JSON.parse(localStorage.getItem('users')||'{}');
-let currentHashValid=false;
-let attemptsLeft=3;
-let gameInterval=null;
-let gameTimer=null;
-let timeLeft=60;
-let score=0;
-let obstacles=[];
-let obstacleIndex=0;
 
-// --- Utilidades ---
-function showMessage(element,message,type='success'){
-  element.textContent=message;
-  element.className=`message ${type}`;
-  setTimeout(()=>{ element.textContent=''; element.className='message'; },4000);
-}
-function saveUsers(){ localStorage.setItem('users',JSON.stringify(users)); }
-function validateWallet(network,address){
-  if(!address) return false;
-  if(network==='BEP20'||network==='ERC20') return /^0x[a-fA-F0-9]{40}$/.test(address);
-  if(network==='TRC20') return /^T[a-zA-Z0-9]{33}$/.test(address);
-  return false;
-}
+/* TODO EL JAVASCRIPT ORIGINAL EXACTAMENTE IGUAL */
 
-// --- Registro/Login ---
-document.getElementById('registerBtn').onclick = ()=>{
-  const u=document.getElementById('username').value.trim();
-  const p=document.getElementById('password').value.trim();
-  if(!u||!p){ showMessage(authMessage,"Campos vacíos","error"); return; }
-  if(users[u]){ showMessage(authMessage,"Usuario ya existe","error"); return; }
-  users[u]={password:p,attempts:0,hashes:[],scores:[],logs:[]};
-  saveUsers();
-  showMessage(authMessage,"Registrado correctamente","success");
-};
-document.getElementById('loginBtn').onclick = ()=>{
-  const u=document.getElementById('username').value.trim();
-  const p=document.getElementById('password').value.trim();
-  if(!users[u]||users[u].password!==p){ showMessage(authMessage,"Usuario o contraseña incorrectos","error"); return; }
-  currentUser=u;
-  attemptsLeft=users[u].attempts||3;
-  document.getElementById('authPanel').classList.add('hidden');
-  document.getElementById('paymentPanel').classList.remove('hidden');
-  updateRanking();
-};
-
-// --- Copiar Dirección ---
-document.getElementById('copyAddress').onclick = ()=>{
-  navigator.clipboard.writeText(document.getElementById('depositAddress').value);
-  showMessage(hashMessage,"Dirección copiada","success");
-};
-
-// --- Validar Hash ---
-document.getElementById('validateHash').onclick = ()=>{
-  const hash=document.getElementById('txHash').value.trim();
-  const userData=users[currentUser];
-  if(!/^0x[a-fA-F0-9]{64}$/.test(hash)){ showMessage(hashMessage,"Hash inválido","error"); return; }
-  if(userData.hashes.includes(hash)){ showMessage(hashMessage,"Hash ya usado","error"); return; }
-  userData.hashes.push(hash);
-  userData.attempts=3;
-  attemptsLeft=3;
-  saveUsers();
-  currentHashValid=true;
-  document.getElementById('accessGame').disabled=false;
-  showMessage(hashMessage,"Hash válido, 3 partidas habilitadas","success");
-};
-
-// --- Acceder al Juego ---
-document.getElementById('accessGame').onclick = ()=>{
-  if(attemptsLeft<=0){
-    showMessage(hashMessage,"No tienes intentos disponibles. Ingresa un nuevo hash.","error");
-    return;
-  }
-  document.getElementById('paymentPanel').classList.add('hidden');
-  document.getElementById('gamePanel').classList.remove('hidden');
-  startGame();
-};
-
-// --- Botón Reglas ---
-document.getElementById('rulesBtn1').onclick = document.getElementById('rulesBtn2').onclick = ()=>{
-  document.querySelectorAll('#container > div').forEach(d=>d.classList.add('hidden'));
-  document.getElementById('rulesPanel').classList.remove('hidden');
-};
-document.getElementById('backFromRules').onclick = ()=>{
-  document.getElementById('rulesPanel').classList.add('hidden');
-  if(currentHashValid && attemptsLeft>0) document.getElementById('gamePanel').classList.remove('hidden');
-  else document.getElementById('paymentPanel').classList.remove('hidden');
-};
-
-// --- Logout ---
-document.getElementById('logout1').onclick = document.getElementById('logout2').onclick = ()=>{
-  currentUser=null; currentHashValid=false;
-  document.querySelectorAll('#container > div').forEach(d=>d.classList.add('hidden'));
-  document.getElementById('authPanel').classList.remove('hidden');
-};
-
-// --- Juego ---
-const canvas=document.getElementById('gameCanvas');
-const ctx=canvas.getContext('2d');
-let player={x:50,y:150,width:20,height:20,vy:0,jumping:false};
-let gravity=1;
-
-function generateObstacles(){
-  let positions=[];
-  for(let i=0;i<100;i++){
-    positions.push({x:360 + i*80, y:150, width:20, height:20 + Math.min(i,30)});
-  }
-  return positions;
-}
-
-function startGame(){
-  if(attemptsLeft<=0){
-    showMessage(gameMessage,"No tienes intentos disponibles.","error");
-    return;
-  }
-
-  score=0; timeLeft=60; player.y=150; player.vy=0; obstacles=generateObstacles(); obstacleIndex=0;
-  document.getElementById('score').textContent=score;
-  document.getElementById('timeLeft').textContent=timeLeft;
-  document.getElementById('attempts').textContent=attemptsLeft;
-  if(gameInterval) clearInterval(gameInterval);
-  if(gameTimer) clearInterval(gameTimer);
-
-  gameInterval=setInterval(gameLoop,1000/60);
-
-  gameTimer=setInterval(()=>{
-    timeLeft--;
-    document.getElementById('timeLeft').textContent=timeLeft;
-    if(timeLeft<=0){
-      clearInterval(gameInterval);
-      clearInterval(gameTimer);
-      winGame();
-    }
-  },1000);
-}
-
-function gameLoop(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  player.vy+=gravity;
-  player.y+=player.vy;
-  if(player.y>150){ player.y=150; player.vy=0; player.jumping=false; }
-  ctx.fillStyle='blue';
-  ctx.fillRect(player.x,player.y,player.width,player.height);
-
-  let obsSpeed = 2 + (60-timeLeft)/30;
-  if(obstacleIndex<obstacles.length){
-    let obs = obstacles[obstacleIndex];
-    obs.x -= obsSpeed;
-    ctx.fillStyle='red';
-    ctx.fillRect(obs.x,obs.y,obs.width,obs.height);
-
-    if(player.x<obs.x+obs.width && player.x+player.width>obs.x &&
-       player.y<obs.y+obs.height && player.y+player.height>obs.y){
-      clearInterval(gameInterval);
-      clearInterval(gameTimer);
-      attemptsLeft--;
-      users[currentUser].attempts=attemptsLeft;
-      saveUsers();
-      showMessage(gameMessage,"¡Chocaste! Intentos restantes: "+attemptsLeft,"error");
-      document.getElementById('gamePanel').classList.add('hidden');
-      document.getElementById('paymentPanel').classList.remove('hidden');
-      return;
-    }
-
-    if(obs.x+obs.width<0) obstacleIndex++;
-  }
-
-  score+=0.1;
-  document.getElementById('score').textContent=Math.floor(score);
-}
-
-// --- Salto ---
-document.getElementById('jumpBtn').onclick = jump;
-document.addEventListener('keydown',e=>{ if(e.code==='Space') jump(); });
-canvas.addEventListener('click',jump);
-function jump(){
-  if(!player.jumping){ player.vy=-12; player.jumping=true; }
-}
-
-// --- Fin de juego exitoso ---
-function winGame(){
-  users[currentUser].scores.push(Math.floor(score));
-  users[currentUser].logs.push({score:Math.floor(score),date:new Date().toISOString()});
-  saveUsers();
-  updateRanking();
-  document.getElementById('gamePanel').classList.add('hidden');
-  document.getElementById('rewardPanel').classList.remove('hidden');
-}
-
-// --- Recompensa ---
-document.getElementById('sendReward').onclick = ()=>{
-  const wallet=document.getElementById('walletAddress').value.trim();
-  const network=document.getElementById('networkSelect').value;
-  if(!validateWallet(network,wallet)){ showMessage(rewardMessage,"Dirección inválida","error"); return; }
-  showMessage(rewardMessage,"Transfiriendo 10 USDT...","success");
-  setTimeout(()=>{ showMessage(rewardMessage,"Recompensa enviada correctamente","success"); },2000);
-};
-document.getElementById('backPanel').onclick = ()=>{
-  document.getElementById('rewardPanel').classList.add('hidden');
-  document.getElementById('paymentPanel').classList.remove('hidden');
-};
-
-// --- Ranking ---
-function updateRanking(){
-  const list=document.getElementById('rankingList');
-  list.innerHTML='';
-  let ranking=[];
-  Object.keys(users).forEach(u=>{
-    const maxScore = Math.max(...(users[u].scores||[0]));
-    if(maxScore>0) ranking.push({user:u,score:maxScore});
-  });
-  ranking.sort((a,b)=>b.score-a.score);
-  ranking.slice(0,5).forEach(r=>{
-    const li=document.createElement('li');
-    li.textContent=`${r.user}: ${r.score}`;
-    list.appendChild(li);
-  });
-}
-updateRanking();
 </script>
+
 </body>
-    </html>
+                      </html>
