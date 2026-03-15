@@ -38,24 +38,26 @@ margin-top:30px;
 width:95%;
 max-width:420px;
 padding:25px;
-
 border-radius:20px;
-
 background:rgba(255,255,255,0.05);
 backdrop-filter:blur(15px);
-
-box-shadow:
-0 0 30px rgba(0,255,255,0.2),
-0 0 60px rgba(0,140,255,0.2);
-
+box-shadow:0 0 40px rgba(0,229,255,0.3);
 border:1px solid rgba(255,255,255,0.1);
+}
+
+.app-title{
+text-align:center;
+font-family:'Orbitron',sans-serif;
+font-size:26px;
+margin-bottom:10px;
+color:#00e5ff;
+text-shadow:0 0 10px #00e5ff;
 }
 
 h2{
 text-align:center;
 margin-bottom:15px;
 font-family:'Orbitron',sans-serif;
-color:#00e5ff;
 }
 
 input,select{
@@ -64,14 +66,8 @@ padding:12px;
 margin:6px 0;
 border-radius:10px;
 border:none;
-outline:none;
 background:#0f172a;
 color:white;
-font-size:15px;
-}
-
-input::placeholder{
-color:#94a3b8;
 }
 
 button{
@@ -81,41 +77,25 @@ margin:6px 0;
 border-radius:12px;
 border:none;
 cursor:pointer;
-
 font-weight:500;
-font-size:15px;
-
 background:linear-gradient(135deg,#00e5ff,#0066ff);
 color:white;
-
-box-shadow:0 0 15px rgba(0,229,255,0.6);
-
+box-shadow:0 0 15px rgba(0,229,255,0.7);
 transition:0.3s;
 }
 
 button:hover{
-
 transform:scale(1.05);
-
-box-shadow:
-0 0 20px #00e5ff,
-0 0 40px #0066ff;
-
+box-shadow:0 0 25px #00e5ff;
 }
 
 canvas{
 display:block;
 margin:auto;
 margin-top:10px;
-
-background:linear-gradient(#e0f7fa,#b2ebf2);
-
-border-radius:12px;
-
+background:#e0f7fa;
+border-radius:10px;
 border:3px solid #00e5ff;
-
-box-shadow:
-0 0 20px rgba(0,229,255,0.7);
 }
 
 .hidden{
@@ -127,7 +107,6 @@ text-align:center;
 padding:8px;
 margin-top:5px;
 border-radius:8px;
-font-size:14px;
 }
 
 .success{
@@ -141,40 +120,11 @@ background:#d50000;
 .scrollable{
 max-height:300px;
 overflow-y:auto;
-padding-right:5px;
-}
-
-.scrollable p{
-margin-bottom:10px;
-line-height:1.4;
-}
-
-#rankingPanel{
-margin-top:15px;
-background:#020617;
-padding:10px;
-border-radius:10px;
-}
-
-#rankingList li{
-padding:4px;
-border-bottom:1px solid rgba(255,255,255,0.1);
 }
 
 .stats{
 text-align:center;
 margin-top:10px;
-font-size:15px;
-color:#cbd5f5;
-}
-
-.app-title{
-font-size:26px;
-text-align:center;
-margin-bottom:10px;
-font-family:'Orbitron',sans-serif;
-color:#00e5ff;
-text-shadow:0 0 15px #00e5ff;
 }
 
 </style>
@@ -186,24 +136,17 @@ text-shadow:0 0 15px #00e5ff;
 
 <div class="app-title">🎮 MINI ARCADE USDT</div>
 
-<!-- LOGIN -->
-
 <div id="authPanel">
 
 <input type="text" id="username" placeholder="Usuario">
-
 <input type="password" id="password" placeholder="Contraseña">
 
 <button id="registerBtn">Crear Cuenta</button>
-
 <button id="loginBtn">Iniciar Sesión</button>
 
 <div id="authMessage" class="message"></div>
 
 </div>
-
-
-<!-- DEPOSITO -->
 
 <div id="paymentPanel" class="hidden">
 
@@ -213,22 +156,17 @@ text-shadow:0 0 15px #00e5ff;
 
 <button id="copyAddress">Copiar Dirección</button>
 
-<input type="text" id="txHash" placeholder="Ingrese Hash de transacción">
+<input type="text" id="txHash" placeholder="Ingrese Hash">
 
 <button id="validateHash">Validar Hash</button>
 
 <div id="hashMessage" class="message"></div>
 
 <button id="accessGame" disabled>Acceder al Juego</button>
-
-<button id="rulesBtn1">Ver Reglas</button>
-
+<button id="rulesBtn1">Reglas</button>
 <button id="logout1">Cerrar Sesión</button>
 
 </div>
-
-
-<!-- JUEGO -->
 
 <div id="gamePanel" class="hidden">
 
@@ -237,27 +175,19 @@ text-shadow:0 0 15px #00e5ff;
 <canvas id="gameCanvas" width="360" height="200"></canvas>
 
 <div class="stats">
-
 Puntuación: <span id="score">0</span> |
 Tiempo: <span id="timeLeft">60</span>s |
 Intentos: <span id="attempts">3</span>
-
 </div>
 
 <button id="jumpBtn">Saltar</button>
-
 <button id="restartGame">Volver a Jugar</button>
-
 <button id="logout2">Cerrar Sesión</button>
-
 <button id="rulesBtn2">Reglas</button>
 
 <div id="gameMessage" class="message"></div>
 
 </div>
-
-
-<!-- RECOMPENSA -->
 
 <div id="rewardPanel" class="hidden">
 
@@ -279,35 +209,20 @@ Intentos: <span id="attempts">3</span>
 
 </div>
 
-
-<!-- REGLAS -->
-
 <div id="rulesPanel" class="hidden">
 
 <h2>Reglas</h2>
 
 <div class="scrollable">
-
-<p>1. Salta obstáculos usando el botón o la barra espaciadora.</p>
-
-<p>2. Cada obstáculo aumenta la puntuación.</p>
-
-<p>3. El juego dura 60 segundos.</p>
-
-<p>4. Cada hash válido otorga 3 intentos.</p>
-
-<p>5. Después de 3 partidas necesitas otro hash.</p>
-
-<p>6. Completa el juego para reclamar 10 USDT.</p>
-
+<p>1. Salta obstáculos usando botón o barra espaciadora.</p>
+<p>2. El juego dura 60 segundos.</p>
+<p>3. Cada hash permite 3 intentos.</p>
+<p>4. Tras 3 partidas debes ingresar otro hash.</p>
 </div>
 
 <button id="backFromRules">Volver</button>
 
 </div>
-
-
-<!-- RANKING -->
 
 <div id="rankingPanel">
 
@@ -319,12 +234,217 @@ Intentos: <span id="attempts">3</span>
 
 </div>
 
-
 <script>
 
-/* TODO EL JAVASCRIPT ORIGINAL EXACTAMENTE IGUAL */
+let currentUser=null;
+let users=JSON.parse(localStorage.getItem('users')||'{}');
+let currentHashValid=false;
+let attemptsLeft=3;
+let gameInterval=null;
+let gameTimer=null;
+let timeLeft=60;
+let score=0;
+let obstacles=[];
+let obstacleIndex=0;
+
+const canvas=document.getElementById('gameCanvas');
+const ctx=canvas.getContext('2d');
+
+let player={x:50,y:150,width:20,height:20,vy:0,jumping:false};
+
+function showMessage(el,msg,type='success'){
+el.textContent=msg;
+el.className='message '+type;
+setTimeout(()=>{el.textContent='';el.className='message'},4000);
+}
+
+function saveUsers(){
+localStorage.setItem('users',JSON.stringify(users));
+}
+
+function updateRanking(){
+
+const list=document.getElementById('rankingList');
+
+list.innerHTML='';
+
+let ranking=[];
+
+Object.keys(users).forEach(u=>{
+const max=Math.max(...(users[u].scores||[0]));
+if(max>0) ranking.push({user:u,score:max});
+});
+
+ranking.sort((a,b)=>b.score-a.score);
+
+ranking.slice(0,5).forEach(r=>{
+let li=document.createElement('li');
+li.textContent=r.user+" : "+r.score;
+list.appendChild(li);
+});
+
+}
+
+document.getElementById('registerBtn').onclick=()=>{
+
+const u=username.value.trim();
+const p=password.value.trim();
+
+if(!u||!p){
+showMessage(authMessage,"Campos vacíos","error");
+return;
+}
+
+if(users[u]){
+showMessage(authMessage,"Usuario ya existe","error");
+return;
+}
+
+users[u]={password:p,hashes:[],scores:[]};
+
+saveUsers();
+
+showMessage(authMessage,"Registro exitoso");
+
+};
+
+document.getElementById('loginBtn').onclick=()=>{
+
+const u=username.value.trim();
+const p=password.value.trim();
+
+if(!users[u]||users[u].password!==p){
+showMessage(authMessage,"Datos incorrectos","error");
+return;
+}
+
+currentUser=u;
+
+authPanel.classList.add('hidden');
+paymentPanel.classList.remove('hidden');
+
+updateRanking();
+
+};
+
+document.getElementById('copyAddress').onclick=()=>{
+navigator.clipboard.writeText(depositAddress.value);
+showMessage(hashMessage,"Dirección copiada");
+};
+
+document.getElementById('validateHash').onclick=()=>{
+
+const hash=txHash.value.trim();
+
+if(!/^0x[a-fA-F0-9]{64}$/.test(hash)){
+showMessage(hashMessage,"Hash inválido","error");
+return;
+}
+
+currentHashValid=true;
+attemptsLeft=3;
+accessGame.disabled=false;
+
+showMessage(hashMessage,"Hash válido");
+
+};
+
+document.getElementById('accessGame').onclick=()=>{
+
+paymentPanel.classList.add('hidden');
+gamePanel.classList.remove('hidden');
+
+startGame();
+
+};
+
+function startGame(){
+
+score=0;
+timeLeft=60;
+
+player.y=150;
+
+document.getElementById('attempts').textContent=attemptsLeft;
+
+gameInterval=setInterval(gameLoop,1000/60);
+
+gameTimer=setInterval(()=>{
+
+timeLeft--;
+
+timeLeftEl=document.getElementById('timeLeft');
+timeLeftEl.textContent=timeLeft;
+
+if(timeLeft<=0){
+
+clearInterval(gameInterval);
+clearInterval(gameTimer);
+
+winGame();
+
+}
+
+},1000);
+
+}
+
+function gameLoop(){
+
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+player.vy+=1;
+
+player.y+=player.vy;
+
+if(player.y>150){
+
+player.y=150;
+player.vy=0;
+player.jumping=false;
+
+}
+
+ctx.fillStyle="blue";
+ctx.fillRect(player.x,player.y,player.width,player.height);
+
+score+=0.1;
+
+document.getElementById('score').textContent=Math.floor(score);
+
+}
+
+function jump(){
+
+if(!player.jumping){
+
+player.vy=-12;
+player.jumping=true;
+
+}
+
+}
+
+document.getElementById('jumpBtn').onclick=jump;
+
+document.addEventListener('keydown',e=>{
+if(e.code==="Space")jump();
+});
+
+function winGame(){
+
+users[currentUser].scores.push(Math.floor(score));
+
+saveUsers();
+
+updateRanking();
+
+gamePanel.classList.add('hidden');
+rewardPanel.classList.remove('hidden');
+
+}
 
 </script>
 
 </body>
-                      </html>
+  </html>
